@@ -1,13 +1,5 @@
 # Los Angeles Pay Roll Visualization Using R Shiny 
----
-subtitle: Due Mar 1 @ 11:59PM
-author: Yu Xia
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+Demo(webapp):https://yuxiarain.shinyapps.io/LA-City-Payroll/
 
 Use tidyverse and bash to explore following two data sets.
 
@@ -46,114 +38,25 @@ The SQLite database `/home/m280data/la_parking/LA_Parking_Citations.sqlite` on t
 
 1. How many tickets are in this data set? Which time period do these tickets span? Which years have most data?
 
-```{r}
-library("DBI")
-library("RSQLite")
-library("dplyr")
-con = dbConnect(RSQLite::SQLite(), "/home/m280data/la_parking/LA_Parking_Citations.sqlite")
-latix <- dplyr::tbl(con,"latix")
-df<- latix %>%
-  select(Ticket_number, Issue_Year, Issue_Month, Issue_Day, Issue_Hour,
-         Issue_Wday, Color, Violation_Description, Fine_amount, Make)
-df %>% summarize(n = n())
-df %>% filter(is.na(Issue_Year) == F) %>%
-         arrange(Issue_Year, Issue_Month, Issue_Day, Issue_Hour) %>%
-         collect() %>%
-         slice(c(1,n()))
-df %>% group_by(Issue_Year) %>%
-         filter(is.na(Issue_Year) == F) %>%
-         summarise(n = n()) %>%
-         collect() %>%
-         ggplot() +
-            geom_col(aes(x = Issue_Year, y = n)) +
-            labs(title = "Citations per Year",
-                 x = "Issue Year", y = "Count")
-```
-
   **Answer: There are 7656418	tickets in total within the data set. The tickets span from 01:00 on 07/02/2015 to 23:00 on 01/25/2019. 2017 has the most citation tickets.**
 
 2. When (which hour, weekday, month day, and month) are you most likely to get a ticket and when are you least likely to get a ticket?
-```{r}
-df %>% group_by(Issue_Hour) %>%
-  filter(is.na(Issue_Hour) == F) %>%
-  summarise(n = n()) %>%
-  collect() %>%
-  ggplot() +
-  geom_col(aes(x = Issue_Hour, y = n)) +
-  labs(title = "Citations per Hour",
-       x = "Issue Hour", y = "Count")
-df %>% group_by(Issue_Wday) %>%
-  filter(is.na(Issue_Wday) == F) %>%
-  summarise(n = n()) %>%
-  collect() %>%
-  ggplot() +
-  geom_col(aes(x = Issue_Wday, y = n)) +
-  labs(title = "Citations per Weekday",
-       x = "Issue Weekday", y = "Count")
-df %>% group_by(Issue_Month) %>%
-  filter(is.na(Issue_Month) == F) %>%
-  summarise(n = n()) %>%
-  collect() %>%
-  ggplot() +
-  geom_col(aes(x = Issue_Month, y = n)) +
-  labs(title = "Citations per Month",
-       x = "Issue Month", y = "Count") +
-       scale_x_continuous(breaks = c(1:12), labels = c(1:12))
-df %>% group_by(Issue_Day) %>%
-  filter(is.na(Issue_Day) == F) %>%
-  summarise(n = n()) %>%
-  arrange(n) %>%
-  collect() %>%
-  slice(c(1,n()))
-```
 
   **Answer: The most likely time to receive tickets is 12 PM while the least likely time to receive tickets is 5AM. The most likely weekday to receive tickets is Wednesday while the least likely weekday to receive tickets is Monday. The most likely day to receive tickets is 13th of the month while the least likely day to receive tickets is the 31st of the month. The most likely month to receive tickets is August while the least likely weekday to receive tickets is February.**
 
 3. Which car makes received most citations?
 
-```{r}
-df %>% group_by(Make) %>%
-  filter(is.na(Make) == F) %>%
-  summarise(n = n()) %>%
-  arrange(desc(n)) %>%
-  collect()
-```
-
   **Answer: TOYT had the most tickets.**
 
 4. How many different colors of cars were ticketed? Which color attracted most tickets?
-
-```{r}
-df %>% group_by(Color) %>%
-  filter(is.na(color) == F) %>%
-  summarise(n = n()) %>%
-  arrange(desc(n)) %>%
-  collect()
-```
 
   **Answer: There are 103 different colors, and BK attracted the most tickets.**
 
 5. What are the most common ticket types?
 
-```{r}
-df %>% group_by(Violation_Description) %>%
-  filter(is.na(Violation_Description) == F) %>%
-  summarise(n = n()) %>%
-  arrange(desc(n)) %>%
-  collect()
-```
-
   **Answer: NO PARK/STREET CLEAN, METER EXP., RED ZONE, and PREFERENTIAL PARKING are the most common types of citation.**
 
 6. How much money was collected on parking tickets in 2016, 2017 and 2018?
-
-```{r}
-df %>%
-  filter(is.na(Issue_Year) == F) %>%
-  group_by(Issue_Year) %>%
-  summarise(sum = sum(Fine_amount), na.rm = TRUE) %>%
-  collect()
-```
 
   **Answer: 152145538 dollars in 2016; 157122489	dollars in 2017; and 138875787 dollars in 2018.**
 
